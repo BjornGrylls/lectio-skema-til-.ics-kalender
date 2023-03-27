@@ -108,7 +108,7 @@ function lectio(res, amount, type, school, person, skew) {
     this.beginOutput = function() {
         begin = 'BEGIN:VCALENDAR\r\n';
         begin += 'VERSION:2.0\r\n';
-        begin += 'PRODID:-lectio2ics-service.herokuapp.com/?skole=575&elev=43439479846\r\n';
+        begin += 'PRODID:lectio2ics.glitch.me/\r\n';
         begin += 'CALSCALE:GREGORIAN\r\n';
         begin += 'METHOD:PUBLISH\r\n';
         begin += 'X-PUBLISHED-TTL:PT15M\r\n';
@@ -288,7 +288,7 @@ function lectio(res, amount, type, school, person, skew) {
                 .createHash('md5')
                 .update(teacher + start + end)
                 .digest('hex') +
-            '@lectio2ics-service.herokuapp.com' +
+            '@lectio2ics.glitch.me' +
             '\r\n';
         o += 'SEQUENCE:' + server.sequence + '\r\n'; //This is important, to push updates
         if (cancelled === true) o += 'STATUS:CANCELLED' + '\r\n';
