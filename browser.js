@@ -33,39 +33,42 @@ const browserLogin = async () => {
   let browser, cookies, page;
 
   try {
-    browser = await puppeteer.launch({
-      args: [
-        ...BROWSER_ARGS,
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-first-run',
-        '--no-sandbox',
-        '--no-zygote',
-      ],
-      headless: IS_HEADLESS,
-    });
+    return retry(async () => {
+      browser = await puppeteer.launch({
+        args: [
+          ...BROWSER_ARGS,
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--disable-setuid-sandbox',
+          '--no-first-run',
+          '--no-sandbox',
+          '--no-zygote',
+        ],
+        headless: IS_HEADLESS,
+        // If on Raspberry Pi, uncomment line below after 
+        // installing chromium via apt (or similar)
+        // See https://github.com/puppeteer/puppeteer/issues/7917
+        // and https://github.com/soeren-b-c/lectio-skema-til-.ics-kalender/issues/24
+        //executablePath: '/usr/bin/chromium-browser',
+      });
 
-    page = await browser.newPage();
-    page.setDefaultNavigationTimeout(TIMEOUT);
+      page = await browser.newPage();
+      page.setDefaultNavigationTimeout(TIMEOUT);
 
-    stdout.write(`Logging in to ${LOGIN_URL}\n`);
-    await page.goto(`${LOGIN_URL}`, NET_IDLE);
-    stdout.write(`$Typing username in ${USERNAME_SELECTOR}\n`);
-    await page.type(`${USERNAME_SELECTOR}`, env.LECTIO_USERNAME);
-    stdout.write(`Typing password\n`);
-    await page.type(`${PASSWORD_SELECTOR}`, env.LECTIO_PASSWORD);
+      stdout.write(new Date().toUTCString() + `: Logging in...\n`);
+      await page.goto(`${BASE_URL}/${user.school}/login.aspx`, NET_IDLE);
+      await page.type(`${USERNAME_SELECTOR}`, user.name);
+      await page.type(`${PASSWORD_SELECTOR}`, user.pass);
 
-    stdout.write(`Clicking button\n`);
-    await Promise.all([
-      page.click(`${BUTTON_SELECTOR}`),
-      page.waitForNavigation(NET_IDLE),
-    ]);
-    stdout.write(`Button clicked\n`);
+      await Promise.all([
+        page.click(`${BUTTON_SELECTOR}`),
+        page.waitForNavigation(NET_IDLE),
+      ]);
 
-    cookies = await page.cookies();
+      cookies = await page.cookies();
 
-    return { browser, cookies, proxy };
+      return { browser, cookies };
+    }, { onError: (error) => stderr.write(new Date().toUTCString() + ` browserLogin(): ${error}`) });
   } catch (error) {
     stderr.write(`browserLogin(): ${error}\n`);
   }
